@@ -1,0 +1,34 @@
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# PyCharm
+.idea
+
+# PyBuilder
+target/
+
+# pyenv
+.python-version
+
+# Environments
+.env
+!data/.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.vscode/
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+
+*.dump
+.gitconfig
