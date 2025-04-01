@@ -1,6 +1,7 @@
 from beanie import Document
 
-class BaseUser(Document):
+# MongoDB
+class User(Document):
     username: str
     password: str
 

@@ -1,12 +1,10 @@
+from pydantic import BaseModel
 from beanie import PydanticObjectId
-import bcrypt
-from pixelboost.models import BaseUser
 
-
-def hash_password(password: str):
-    pw = bytes(password, "utf-8")
-    salt = bcrypt.gensalt()
-    return bcrypt.hashpw(pw, salt)
-
-class UserRead(BaseUser):
+class UserRead(BaseModel):
     id: PydanticObjectId
+    username: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str

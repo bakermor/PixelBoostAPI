@@ -1,11 +1,13 @@
-from beanie import PydanticObjectId
-from typing import Optional
-from .models import UserRead
+from pixelboost.models import User
+from .utils import hash_password
 
-async def get_all() -> list[UserRead]:
-    users = await UserRead.find_all().to_list()
-    return users
 
-async def get(userID: PydanticObjectId) -> Optional[UserRead]:
-    user = await UserRead.get(userID)
+async def get_by_username(username: str) -> User:
+    user = await User.find_one({'username': username})
+    return user
+
+async def create(user_in: User) -> User:
+    user_in.password = hash_password(user_in.password)
+
+    user = await User.insert_one(user_in)
     return user

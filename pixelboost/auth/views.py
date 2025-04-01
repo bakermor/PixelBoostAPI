@@ -1,21 +1,16 @@
-from fastapi import APIRouter, HTTPException
-from beanie import PydanticObjectId
+from fastapi import APIRouter, HTTPException, status
+
+from pixelboost.models import User
 from .models import UserRead
-from .service import get, get_all
+from .service import get_by_username, create
 
 router = APIRouter()
 
-# TEST
-@router.get("/", response_model=list[UserRead])
-async def get_users():
-    users = await get_all()
-    return users
-
-@router.get("/{userID}", response_model=UserRead)
-async def get_user(userID: PydanticObjectId):
-    user = await get(userID)
-    if not user:
-        raise HTTPException(
-            status_code=404, detail=f"User with id {id} not found"
-        )
+@router.post("/register", response_model=UserRead)
+async def register_user(user_in: User):
+    user = await get_by_username(user_in.username)
+    if user:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                            detail='Username in use')
+    user = await create(user_in)
     return user
