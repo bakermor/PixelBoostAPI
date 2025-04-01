@@ -24,4 +24,5 @@ async def login_user(user_in: UserLogin):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail='Invalid username and password')
 
-    response = login(user)
+    response = await login(user)
+    return response
