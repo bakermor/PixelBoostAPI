@@ -5,7 +5,7 @@ from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 
 from pixelboost.models import User
-from .models import UserRegister, UserUpdate, UserUpdatePassword, Token
+from .models import UserRegister, UserUpdate, UserUpdateEmail, UserUpdatePassword, Token
 from .utils import hash_password, create_access_token, create_refresh_token, verify_token, verify_refresh_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -61,6 +61,17 @@ async def update(user_id: PydanticObjectId, user_in: UserUpdate):
     update_data = user_in.model_dump(exclude_unset=True)
     await User.find_one(User.id == user_id).update({"$set": update_data})
     user = await User.get(user_id)
+    return user
+
+async def update_username(user: User, username: str):
+    user.username = username
+    await user.save()
+    return user
+
+async def update_email(user: User, user_in: UserUpdateEmail):
+    user.email = user_in.email
+    user.is_verified = False
+    await user.save()
     return user
 
 async def set_password(user_in: User, password: UserUpdatePassword) -> User:

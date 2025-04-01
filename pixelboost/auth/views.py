@@ -4,8 +4,10 @@ from beanie import PydanticObjectId
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
-from .models import UserRead, UserRegister, Token, RefreshRequest, UserUpdatePassword, UserUpdate
-from .service import get_by_username, create, login, refresh, set_password, update, validate_user, CurrentUser
+from .models import (UserRead, UserRegister, Token, RefreshRequest, UserUpdatePassword, UserUpdate, UserUpdateUsername,
+                     UserUpdateEmail)
+from .service import (get_by_username, create, login, refresh, set_password, update, validate_user, update_username,
+                      update_email, CurrentUser)
 from .utils import verify_password
 
 router = APIRouter()
@@ -45,6 +47,23 @@ async def update_user(user_id: PydanticObjectId, user_in: UserUpdate, current_us
     await validate_user(user_id, current_user)
     user = await update(user_id, user_in)
     return user
+
+@router.post("/{user_id}/change-username", response_model=UserRead)
+async def change_username(user_id: PydanticObjectId, username_update: UserUpdateUsername, current_user: CurrentUser):
+    user = await validate_user(user_id, current_user)
+    user_in = await get_by_username(username_update.username)
+    if user_in:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                            detail='Username in use')
+    user_out = await update_username(user, username_update.username)
+    return user_out
+
+@router.post("/{user_id}/change-email", response_model=UserRead)
+async def change_username(user_id: PydanticObjectId, email_update: UserUpdateEmail, current_user: CurrentUser):
+    user = await validate_user(user_id, current_user)
+    user_out = await update_email(user, email_update)
+    return user_out
+
 
 @router.post("/{user_id}/change-password", response_model=UserRead)
 async def change_password(user_id: PydanticObjectId, password_update: UserUpdatePassword, current_user: CurrentUser):
