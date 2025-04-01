@@ -4,10 +4,10 @@ from beanie import PydanticObjectId
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
-from .models import (UserRead, UserRegister, Token, RefreshRequest, UserUpdatePassword, UserUpdate, UserUpdateUsername,
-                     UserUpdateEmail)
-from .service import (get_by_username, create, login, refresh, set_password, update, validate_user, update_username,
-                      update_email, CurrentUser)
+from .models import (RefreshRequest, Token, UserRead, UserRegister, UserUpdate, UserUpdateEmail, UserUpdatePassword,
+                     UserUpdateUsername)
+from .service import (create, delete, get_by_username, login, refresh, set_password, update, update_email,
+                      update_username, validate_user, CurrentUser)
 from .utils import verify_password
 
 router = APIRouter()
@@ -73,3 +73,8 @@ async def change_password(user_id: PydanticObjectId, password_update: UserUpdate
                             detail="Invalid current password")
     user_out = await set_password(user, password_update)
     return user_out
+
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(user_id: PydanticObjectId, current_user: CurrentUser):
+    user = await validate_user(user_id, current_user)
+    await delete(user)

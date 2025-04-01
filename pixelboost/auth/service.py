@@ -5,8 +5,8 @@ from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 
 from pixelboost.models import User
-from .models import UserRegister, UserUpdate, UserUpdateEmail, UserUpdatePassword, Token
-from .utils import hash_password, create_access_token, create_refresh_token, verify_token, verify_refresh_token
+from .models import Token, UserRegister, UserUpdate, UserUpdateEmail, UserUpdatePassword
+from .utils import create_access_token, create_refresh_token, hash_password, verify_token, verify_refresh_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -78,6 +78,9 @@ async def set_password(user_in: User, password: UserUpdatePassword) -> User:
     user_in.password = hash_password(password.new_password)
     await user_in.save()
     return user_in
+
+async def delete(user: User):
+    await user.delete()
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
     credentials_exception = HTTPException(
