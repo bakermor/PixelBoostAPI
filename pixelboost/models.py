@@ -1,5 +1,6 @@
 from beanie import Document
-from pydantic import EmailStr, Field
+from pydantic import EmailStr
+
 
 # MongoDB
 class User(Document):
@@ -7,6 +8,8 @@ class User(Document):
     email: EmailStr
     is_verified: bool = False
     password: str
+
+    name: str
 
     class Settings:
         name = "users"

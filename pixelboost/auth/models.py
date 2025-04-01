@@ -13,6 +13,7 @@ class RefreshRequest(BaseModel):
 class UserBase(BaseModel):
     username: str
     email: EmailStr
+    name: str
 
 class UserRead(UserBase):
     id: PydanticObjectId
@@ -21,6 +22,7 @@ class UserRegister(BaseModel):
     username: str = Field(min_length=3, max_length=36)
     email: EmailStr
     password: str
+    name: str
 
     @field_validator("password")
     def validate_password(cls, v):
@@ -33,6 +35,15 @@ class UserRegister(BaseModel):
         if not (any(c.isupper() for c in v) and any(c.islower() for c in v)):
             raise ValueError("Password must contain both uppercase and lowercase characters")
         return v
+
+class UserUpdate(BaseModel):
+    name: str | None = None
+
+class UserUpdateEmail(BaseModel):
+    email: EmailStr
+
+class UserUpdateUsername(BaseModel):
+    username: str = Field(min_length=3, max_length=36)
 
 class UserUpdatePassword(BaseModel):
     current_password: str

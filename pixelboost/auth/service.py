@@ -1,11 +1,11 @@
 from typing import Annotated
 
+from beanie import PydanticObjectId
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
-from beanie import PydanticObjectId
 
 from pixelboost.models import User
-from .models import UserRegister, UserUpdatePassword, Token
+from .models import UserRegister, UserUpdate, UserUpdatePassword, Token
 from .utils import hash_password, create_access_token, create_refresh_token, verify_token, verify_refresh_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -45,6 +45,23 @@ async def refresh(refresh_token: str) -> Token:
     access_token = create_access_token(username)
     token = Token(access_token=access_token, token_type="bearer", refresh_token=refresh_token)
     return token
+
+async def validate_user(user_id: PydanticObjectId, current_user: User):
+    user = await get(user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail='A user with this id does not exist')
+    if user.id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Could not validate credentials",
+                            headers={"WWW-Authenticate": "Bearer"})
+    return user
+
+async def update(user_id: PydanticObjectId, user_in: UserUpdate):
+    update_data = user_in.model_dump(exclude_unset=True)
+    await User.find_one(User.id == user_id).update({"$set": update_data})
+    user = await User.get(user_id)
+    return user
 
 async def set_password(user_in: User, password: UserUpdatePassword) -> User:
     user_in.password = hash_password(password.new_password)
