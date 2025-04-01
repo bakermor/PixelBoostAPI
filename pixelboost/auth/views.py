@@ -3,8 +3,8 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
-from .models import UserRead, UserRegister, Token
-from .service import get_by_username, create, login, CurrentUser
+from .models import UserRead, UserRegister, Token, RefreshRequest
+from .service import get_by_username, create, login, refresh, CurrentUser
 from .utils import verify_password
 
 router = APIRouter()
@@ -27,8 +27,13 @@ async def login_user(user_in: Annotated[OAuth2PasswordRequestForm, Depends()]):
                             detail='Invalid username or password',
                             headers={"WWW-Authenticate": "Bearer"})
 
-    response = await login(user)
-    return response
+    token = await login(user)
+    return token
+
+@router.post("/refresh", response_model=Token)
+async def refresh_user(refresh_token: RefreshRequest):
+    token = await refresh(refresh_token.refresh_token)
+    return token
 
 @router.get("/me", response_model=UserRead)
 async def get_me(current_user: CurrentUser):
