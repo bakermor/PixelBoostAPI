@@ -2,9 +2,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordRequestForm
+from beanie import PydanticObjectId
 
-from .models import UserRead, UserRegister, Token, RefreshRequest
-from .service import get_by_username, create, login, refresh, CurrentUser
+from .models import UserRead, UserRegister, Token, RefreshRequest, UserUpdatePassword
+from .service import get, get_by_username, create, login, refresh, set_password, CurrentUser
 from .utils import verify_password
 
 router = APIRouter()
@@ -38,3 +39,19 @@ async def refresh_user(refresh_token: RefreshRequest):
 @router.get("/me", response_model=UserRead)
 async def get_me(current_user: CurrentUser):
     return current_user
+
+@router.post("/{user_id}/change-password", response_model=UserRead)
+async def change_password(user_id: PydanticObjectId, password_update: UserUpdatePassword, current_user: CurrentUser):
+    user = await get(user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail='A user with this id does not exist')
+    if user.id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Could not validate credentials",
+                            headers={"WWW-Authenticate": "Bearer"})
+    if not verify_password(password_update.current_password, user.password):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Invalid current password")
+    user_out = await set_password(user, password_update)
+    return user_out
