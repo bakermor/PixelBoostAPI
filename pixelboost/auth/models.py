@@ -1,5 +1,6 @@
-from pydantic import BaseModel
 from beanie import PydanticObjectId
+from pydantic import BaseModel
+
 
 class Token(BaseModel):
     access_token: str
@@ -11,14 +12,6 @@ class UserBase(BaseModel):
 class UserRead(UserBase):
     id: PydanticObjectId
 
-class UserLogin(BaseModel):
-    username: str
-    password: str
-
 class UserRegister(BaseModel):
     username: str
     password: str
-
-class UserLoginResponse(BaseModel):
-    user: UserRead
-    token: Token
