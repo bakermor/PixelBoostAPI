@@ -3,8 +3,8 @@ from datetime import datetime, timedelta, timezone
 import bcrypt
 import jwt
 
-from pixelboost.config import (JWT_ALG, JWT_EXP, JWT_SECRET, JWT_REFRESH_ALG,
-                               JWT_REFRESH_SECRET, JWT_REFRESH_EXP)
+from ..config import (JWT_ALG, JWT_EXP, JWT_SECRET, JWT_REFRESH_ALG,
+                      JWT_REFRESH_SECRET, JWT_REFRESH_EXP)
 
 
 def hash_password(password: str):

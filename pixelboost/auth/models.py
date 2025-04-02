@@ -1,6 +1,9 @@
 from beanie import PydanticObjectId
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
+from ..enums import Stats
+from ..models import Health, Stat
+
 
 class Token(BaseModel):
     access_token: str
@@ -18,11 +21,20 @@ class UserBase(BaseModel):
 class UserRead(UserBase):
     id: PydanticObjectId
 
+    health: Health
+
 class UserRegister(BaseModel):
     username: str = Field(min_length=3, max_length=36)
     email: EmailStr
     password: str
     name: str
+
+    health: Health = Health(hunger=Stat(current_level=0, equation=[1, 1]),
+                            thirst=Stat(current_level=0, equation=[1, 1]),
+                            energy=Stat(current_level=0, equation=[1, 1]),
+                            social=Stat(current_level=0, equation=[1, 1]),
+                            fun=Stat(current_level=0, equation=[1, 1]),
+                            hygiene=Stat(current_level=0, equation=[1, 1]))
 
     @field_validator("password")
     def validate_password(cls, v):

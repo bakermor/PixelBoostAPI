@@ -4,7 +4,7 @@ from beanie import PydanticObjectId
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
 
-from pixelboost.models import User
+from ..models import User
 from .models import Token, UserRegister, UserUpdate, UserUpdateEmail, UserUpdatePassword
 from .utils import create_access_token, create_refresh_token, hash_password, verify_token, verify_refresh_token
 
