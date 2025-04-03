@@ -1,17 +1,8 @@
 from beanie import PydanticObjectId
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from ..enums import Stats
-from ..models import Health, Stat
+from ..models import Health
 
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-    refresh_token: str
-
-class RefreshRequest(BaseModel):
-    refresh_token: str
 
 class UserBase(BaseModel):
     username: str
@@ -23,18 +14,52 @@ class UserRead(UserBase):
 
     health: Health
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "id": "67ee079d43f1a19fe37afe79",
+                    "username": "rosieTheCat",
+                    "email": "giveMeFood@gmail.com",
+                    "name": "Rosie Cat",
+                    
+                    "health": {
+                        "hunger": {
+                            "current_level": 50.0,
+                            "last_updated": 1743654156.04459,
+                            "equation": []
+                        },
+                        "thirst": {
+                            "current_level": 72.0,
+                            "last_updated": 1743654156.04459,
+                            "equation": []
+                        },
+                        "energy": {
+                            "current_level": 13.0,
+                            "last_updated": 1743654156.04459,
+                            "equation": []
+                        },
+                        "social": {
+                            "current_level": 45.0,
+                            "last_updated": 1743654156.04459,
+                            "equation": []
+                        },
+                        "fun": {
+                            "current_level": 90.0,
+                            "last_updated": 1743654178.2973874,
+                            "equation": []
+                        },
+                        "hygiene": {
+                            "current_level": 67.0,
+                            "last_updated": 1743654156.04459,
+                            "equation": []
+                        }}}]}}
+
 class UserRegister(BaseModel):
     username: str = Field(min_length=3, max_length=36)
     email: EmailStr
     password: str
     name: str
-
-    health: Health = Health(hunger=Stat(current_level=0, equation=[1, 1]),
-                            thirst=Stat(current_level=0, equation=[1, 1]),
-                            energy=Stat(current_level=0, equation=[1, 1]),
-                            social=Stat(current_level=0, equation=[1, 1]),
-                            fun=Stat(current_level=0, equation=[1, 1]),
-                            hygiene=Stat(current_level=0, equation=[1, 1]))
 
     @field_validator("password")
     def validate_password(cls, v):
@@ -48,14 +73,45 @@ class UserRegister(BaseModel):
             raise ValueError("Password must contain both uppercase and lowercase characters")
         return v
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "username": "rosieTheCat",
+                    "email": "giveMeFood@gmail.com",
+                    "password": "I4m$uperCool",
+                    "name": "Rosie Cat"
+                }]}}
+
 class UserUpdate(BaseModel):
     name: str | None = None
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "name": "Rosie Cat"
+                }]}}
 
 class UserUpdateEmail(BaseModel):
     email: EmailStr
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "email": "giveMeFood@gmail.com",
+                }]}}
+
 class UserUpdateUsername(BaseModel):
     username: str = Field(min_length=3, max_length=36)
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "username": "rosieTheCat",
+                }]}}
 
 class UserUpdatePassword(BaseModel):
     current_password: str
@@ -72,3 +128,11 @@ class UserUpdatePassword(BaseModel):
         if not (any(c.isupper() for c in v) and any(c.islower() for c in v)):
             raise ValueError("Password must contain both uppercase and lowercase characters")
         return v
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "current_password": "I4m$uperCool",
+                    "new_password": "Cut3$tCat1nT0wn"
+                }]}}

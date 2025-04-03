@@ -1,14 +1,15 @@
 from typing import Annotated
 
 from beanie import PydanticObjectId
-from fastapi import HTTPException, status, Depends
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import HTTPException, status, Depends, Response, Request
 
-from ..models import User
-from .models import Token, UserRegister, UserUpdate, UserUpdateEmail, UserUpdatePassword
-from .utils import create_access_token, create_refresh_token, hash_password, verify_token, verify_refresh_token
+from .models import UserRegister, UserUpdate, UserUpdateEmail, UserUpdatePassword
+from .utils import (OAuth2PasswordBearerWithCookie, create_access_token, create_refresh_token, hash_password,
+                    verify_token, verify_refresh_token)
+from ..config import JWT_EXP, JWT_REFRESH_EXP
+from ..models import User, Health, Stat
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="token")
 
 async def get(user_id: PydanticObjectId) -> User:
     user = await User.get(user_id)
@@ -20,21 +21,33 @@ async def get_by_username(username: str) -> User:
 
 async def create(user_in: UserRegister) -> User:
     user_in.password = hash_password(user_in.password)
-    user = await User.insert_one(User(**user_in.model_dump()))
+    user_data = user_in.model_dump()
+    user_data["health"] = Health(hunger=Stat(current_level=0, equation=[1, 1]),
+                                 thirst=Stat(current_level=0, equation=[1, 1]),
+                                 energy=Stat(current_level=0, equation=[1, 1]),
+                                 social=Stat(current_level=0, equation=[1, 1]),
+                                 fun=Stat(current_level=0, equation=[1, 1]),
+                                 hygiene=Stat(current_level=0, equation=[1, 1]))
+    user = await User.insert_one(User(**user_data))
     return user
 
-async def login(user_in: User) -> Token:
+async def login(user_in: User, response: Response):
     access_token = create_access_token(user_in.username)
     refresh_token = create_refresh_token(user_in.username)
-    token = Token(access_token=access_token, token_type="bearer", refresh_token=refresh_token)
-    return token
+    response.set_cookie(key="access_token", value=f"Bearer {access_token}", httponly=True, max_age=JWT_EXP)
+    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True, max_age=JWT_REFRESH_EXP)
+    return
 
-async def refresh(refresh_token: str) -> Token:
+async def refresh(request: Request, response: Response):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    refresh_token: str = request.cookies.get("refresh_token")
+    if not refresh:
+        raise credentials_exception
+
     username = verify_refresh_token(refresh_token)
     if not username:
         raise credentials_exception
@@ -43,8 +56,8 @@ async def refresh(refresh_token: str) -> Token:
         raise credentials_exception
 
     access_token = create_access_token(username)
-    token = Token(access_token=access_token, token_type="bearer", refresh_token=refresh_token)
-    return token
+    response.set_cookie(key="access_token", value=f"Bearer {access_token}", httponly=True, max_age=JWT_EXP)
+    return
 
 async def validate_user(user_id: PydanticObjectId, current_user: User):
     user = await get(user_id)

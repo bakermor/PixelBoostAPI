@@ -1,19 +1,26 @@
 from typing import Annotated
 
 from beanie import PydanticObjectId
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Response, Request
 from fastapi.security import OAuth2PasswordRequestForm
 
-from .models import (RefreshRequest, Token, UserRead, UserRegister, UserUpdate, UserUpdateEmail, UserUpdatePassword,
-                     UserUpdateUsername)
+from .models import UserRead, UserRegister, UserUpdate, UserUpdateEmail, UserUpdatePassword, UserUpdateUsername
 from .service import (create, delete, get_by_username, login, refresh, set_password, update, update_email,
                       update_username, validate_user, CurrentUser)
 from .utils import verify_password
+from ..responses import Responses
 
-router = APIRouter()
+user_router = APIRouter(tags=["Users"])
+auth_router = APIRouter(tags=["Auth"])
 
-@router.post("/register", status_code=status.HTTP_201_CREATED, response_model=UserRead)
+@user_router.post("/register",
+                  status_code=status.HTTP_201_CREATED,
+                  response_model=UserRead,
+                  responses={status.HTTP_409_CONFLICT: Responses.USERNAME_409})
 async def register_user(user_in: UserRegister):
+    """
+    Register new user.
+    """
     user = await get_by_username(user_in.username)
     if user:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT,
@@ -21,8 +28,13 @@ async def register_user(user_in: UserRegister):
     user = await create(user_in)
     return user
 
-@router.post("/login", response_model=Token)
-async def login_user(user_in: Annotated[OAuth2PasswordRequestForm, Depends()]):
+@auth_router.post("/token",
+                  status_code=status.HTTP_204_NO_CONTENT,
+                  responses={status.HTTP_401_UNAUTHORIZED: Responses.LOGIN_401})
+async def login_user(response: Response, user_in: Annotated[OAuth2PasswordRequestForm, Depends()]):
+    """
+    Login with credentials to get JWT token cookie.
+    """
     user = await get_by_username(user_in.username)
 
     if not user or not verify_password(user_in.password, user.password):
@@ -30,26 +42,47 @@ async def login_user(user_in: Annotated[OAuth2PasswordRequestForm, Depends()]):
                             detail='Invalid username or password',
                             headers={"WWW-Authenticate": "Bearer"})
 
-    token = await login(user)
-    return token
+    await login(user, response)
 
-@router.post("/refresh", response_model=Token)
-async def refresh_user(refresh_token: RefreshRequest):
-    token = await refresh(refresh_token.refresh_token)
-    return token
+@auth_router.post("/refresh",
+                  status_code=status.HTTP_204_NO_CONTENT,
+                  responses={status.HTTP_401_UNAUTHORIZED: Responses.TOKEN_401})
+async def refresh_user(request: Request, response: Response):
+    """
+    Use refresh token cookie to get a new JWT token cookie.
+    """
+    await refresh(request, response)
 
-@router.get("/me", response_model=UserRead)
+@auth_router.get("/me",
+                 response_model=UserRead,
+                 responses={status.HTTP_401_UNAUTHORIZED: Responses.TOKEN_401})
 async def get_me(current_user: CurrentUser):
+    """
+    Returns the logged-in user's information.
+    """
     return current_user
 
-@router.patch("/{user_id}", response_model=UserRead)
+@user_router.patch("/{user_id}",
+                   response_model=UserRead,
+                   responses={status.HTTP_401_UNAUTHORIZED: Responses.TOKEN_401,
+                              status.HTTP_404_NOT_FOUND: Responses.USER_404})
 async def update_user(user_id: PydanticObjectId, user_in: UserUpdate, current_user: CurrentUser):
+    """
+    Update user's general information.
+    """
     await validate_user(user_id, current_user)
     user = await update(user_id, user_in)
     return user
 
-@router.post("/{user_id}/change-username", response_model=UserRead)
+@user_router.post("/{user_id}/change-username",
+                  response_model=UserRead,
+                  responses={status.HTTP_401_UNAUTHORIZED: Responses.TOKEN_401,
+                             status.HTTP_404_NOT_FOUND: Responses.USER_404,
+                             status.HTTP_409_CONFLICT: Responses.USERNAME_409})
 async def change_username(user_id: PydanticObjectId, username_update: UserUpdateUsername, current_user: CurrentUser):
+    """
+    Change user's username.
+    """
     user = await validate_user(user_id, current_user)
     user_in = await get_by_username(username_update.username)
     if user_in:
@@ -58,15 +91,28 @@ async def change_username(user_id: PydanticObjectId, username_update: UserUpdate
     user_out = await update_username(user, username_update.username)
     return user_out
 
-@router.post("/{user_id}/change-email", response_model=UserRead)
+@user_router.post("/{user_id}/change-email",
+                  response_model=UserRead,
+                  responses={status.HTTP_401_UNAUTHORIZED: Responses.TOKEN_401,
+                             status.HTTP_404_NOT_FOUND: Responses.USER_404})
 async def change_username(user_id: PydanticObjectId, email_update: UserUpdateEmail, current_user: CurrentUser):
+    """
+    Change user's email.
+    """
     user = await validate_user(user_id, current_user)
     user_out = await update_email(user, email_update)
     return user_out
 
 
-@router.post("/{user_id}/change-password", response_model=UserRead)
+@user_router.post("/{user_id}/change-password",
+                  response_model=UserRead,
+                  responses={status.HTTP_400_BAD_REQUEST: Responses.PASSWORD_400,
+                             status.HTTP_401_UNAUTHORIZED: Responses.TOKEN_401,
+                             status.HTTP_404_NOT_FOUND: Responses.USER_404})
 async def change_password(user_id: PydanticObjectId, password_update: UserUpdatePassword, current_user: CurrentUser):
+    """
+    Change user's password.
+    """
     user = await validate_user(user_id, current_user)
     if not verify_password(password_update.current_password, user.password):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
@@ -74,7 +120,13 @@ async def change_password(user_id: PydanticObjectId, password_update: UserUpdate
     user_out = await set_password(user, password_update)
     return user_out
 
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@user_router.delete("/{user_id}",
+                    status_code=status.HTTP_204_NO_CONTENT,
+                    responses={status.HTTP_401_UNAUTHORIZED: Responses.TOKEN_401,
+                               status.HTTP_404_NOT_FOUND: Responses.USER_404})
 async def delete_user(user_id: PydanticObjectId, current_user: CurrentUser):
+    """
+    Delete user.
+    """
     user = await validate_user(user_id, current_user)
     await delete(user)
