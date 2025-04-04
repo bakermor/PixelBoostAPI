@@ -57,7 +57,8 @@ class UserRead(UserBase):
                         }}}]}}
 
 class UserRegister(BaseModel):
-    username: str = Field(min_length=3, max_length=36)
+    username: str = Field(min_length=3, max_length=24, pattern=r"^[a-zA-Z0-9_.-]+$",
+                          description="Username must be 3-24 chars: letters, numbers, underscores, dots, or hyphens")
     email: EmailStr
     password: str
     name: str
@@ -105,7 +106,7 @@ class UserUpdateEmail(BaseModel):
                 }]}}
 
 class UserUpdateUsername(BaseModel):
-    username: str = Field(min_length=3, max_length=36)
+    username: str = Field(min_length=3, max_length=24, pattern=r"^[a-zA-Z0-9_.-]+$")
 
     model_config = {
         "json_schema_extra": {
