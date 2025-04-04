@@ -89,14 +89,10 @@ class User(Document):
     is_verified: bool = False
     password: str
 
-    current_activity: Link["Activity"] | None = None
+    current_activity: Link[Activity] | None = None
 
     health: Health
     activities: list[PydanticObjectId] = []
 
     class Settings:
         name = "users"
-
-
-Activity.model_rebuild()
-User.model_rebuild()
