@@ -1,14 +1,14 @@
 from typing import Annotated
 
 from beanie import PydanticObjectId
-from fastapi import APIRouter, HTTPException, status, Depends, Response, Request
+from fastapi import APIRouter, status, Depends, Response, Request
 from fastapi.security import OAuth2PasswordRequestForm
 
 from .models import UserRead, UserRegister, UserUpdate, UserUpdateEmail, UserUpdatePassword, UserUpdateUsername
 from .service import (create, delete, get_by_username, login, refresh, set_password, update, update_email,
                       update_username, validate_user, CurrentUser)
 from .utils import verify_password
-from ..responses import Responses
+from ..exceptions import Responses, USERNAME_CONFLICT, BAD_LOGIN, INCORRECT_PASSWORD
 
 user_router = APIRouter(tags=["Users"])
 auth_router = APIRouter(tags=["Auth"])
@@ -23,8 +23,7 @@ async def register_user(user_in: UserRegister):
     """
     user = await get_by_username(user_in.username)
     if user:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                            detail='Username in use')
+        raise USERNAME_CONFLICT
     user = await create(user_in)
     return user
 
@@ -38,9 +37,7 @@ async def login_user(response: Response, user_in: Annotated[OAuth2PasswordReques
     user = await get_by_username(user_in.username)
 
     if not user or not verify_password(user_in.password, user.password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail='Invalid username or password',
-                            headers={"WWW-Authenticate": "Bearer"})
+        raise BAD_LOGIN
 
     await login(user, response)
 
@@ -86,8 +83,7 @@ async def change_username(user_id: PydanticObjectId, username_update: UserUpdate
     user = await validate_user(user_id, current_user)
     user_in = await get_by_username(username_update.username)
     if user_in:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                            detail='Username in use')
+        raise USERNAME_CONFLICT
     user_out = await update_username(user, username_update.username)
     return user_out
 
@@ -115,8 +111,7 @@ async def change_password(user_id: PydanticObjectId, password_update: UserUpdate
     """
     user = await validate_user(user_id, current_user)
     if not verify_password(password_update.current_password, user.password):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Invalid current password")
+        raise INCORRECT_PASSWORD
     user_out = await set_password(user, password_update)
     return user_out
 

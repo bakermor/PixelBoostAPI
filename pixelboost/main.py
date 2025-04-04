@@ -4,7 +4,7 @@ from fastapi import FastAPI
 
 from pixelboost import config
 from .api import api_router
-from .models import User
+from .models import User, Activity
 
 app = FastAPI()
 
@@ -13,7 +13,7 @@ async def init_db():
     client = motor.motor_asyncio.AsyncIOMotorClient(config.MONGO_DATABASE_URI)
     db = client.get_database(config.DATABASE_NAME)
 
-    await init_beanie(database=db, document_models=[User])
+    await init_beanie(database=db, document_models=[User, Activity])
 
 @app.on_event("startup")
 async def start_db():

@@ -1,11 +1,11 @@
 from beanie import PydanticObjectId
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 
 from .service import update, update_one
 from ..auth.service import validate_user, CurrentUser
 from ..enums import Stats
+from ..exceptions import Responses, BAD_STAT
 from ..models import Health, Stat
-from ..responses import Responses
 
 router = APIRouter(tags=["Health"])
 
@@ -43,7 +43,6 @@ async def update_stat(user_id: PydanticObjectId, stat: str, updated_stat: Stat, 
     """
     user = await validate_user(user_id, current_user)
     if stat not in Stats:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Invalid stat")
+        raise BAD_STAT
     user_out = await update_one(user, stat, updated_stat)
     return user_out.health

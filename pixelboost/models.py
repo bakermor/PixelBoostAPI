@@ -1,9 +1,8 @@
-from datetime import date
-
-from beanie import Document
-from pydantic import BaseModel, EmailStr, field_validator, Field
+from beanie import Document, Link, PydanticObjectId
+from pydantic import BaseModel, EmailStr, field_validator
 
 
+# Pydantic
 class Stat(BaseModel):
     current_level: float
     last_updated: float | None = None
@@ -65,7 +64,24 @@ class Health(BaseModel):
                         "equation": []
                     }}]}}
 
+class Modifiers(BaseModel):
+    hunger: float | None = None
+    thirst: float | None = None
+    energy: float | None = None
+    social: float | None = None
+    fun: float | None = None
+    hygiene: float | None = None
+
 # MongoDB
+class Activity(Document):
+    name: str
+    start_time: float | None = None
+    time_limit: float | None = None
+    modifiers: Modifiers
+
+    class Settings:
+        name = "activities"
+
 class User(Document):
     username: str
     name: str
@@ -73,13 +89,14 @@ class User(Document):
     is_verified: bool = False
     password: str
 
+    current_activity: Link["Activity"] | None = None
+
     health: Health
+    activities: list[PydanticObjectId] = []
 
     class Settings:
         name = "users"
 
-class Activity(Document):
-    name: str
 
-    class Settings:
-        name = "activities"
+Activity.model_rebuild()
+User.model_rebuild()

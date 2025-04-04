@@ -1,12 +1,13 @@
 from typing import Annotated
 
 from beanie import PydanticObjectId
-from fastapi import HTTPException, status, Depends, Response, Request
+from fastapi import Depends, Response, Request
 
 from .models import UserRegister, UserUpdate, UserUpdateEmail, UserUpdatePassword
 from .utils import (OAuth2PasswordBearerWithCookie, create_access_token, create_refresh_token, hash_password,
                     verify_token, verify_refresh_token)
 from ..config import JWT_EXP, JWT_REFRESH_EXP
+from ..exceptions import BAD_TOKEN, USER_NOT_FOUND
 from ..models import User, Health, Stat
 
 oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="token")
@@ -39,21 +40,16 @@ async def login(user_in: User, response: Response):
     return
 
 async def refresh(request: Request, response: Response):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
     refresh_token: str = request.cookies.get("refresh_token")
     if not refresh:
-        raise credentials_exception
+        raise BAD_TOKEN
 
     username = verify_refresh_token(refresh_token)
     if not username:
-        raise credentials_exception
+        raise BAD_TOKEN
     user = await get_by_username(username)
     if not user:
-        raise credentials_exception
+        raise BAD_TOKEN
 
     access_token = create_access_token(username)
     response.set_cookie(key="access_token", value=f"Bearer {access_token}", httponly=True, max_age=JWT_EXP)
@@ -62,12 +58,9 @@ async def refresh(request: Request, response: Response):
 async def validate_user(user_id: PydanticObjectId, current_user: User):
     user = await get(user_id)
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail='A user with this id does not exist')
+        raise USER_NOT_FOUND
     if user.id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="Could not validate credentials",
-                            headers={"WWW-Authenticate": "Bearer"})
+        raise BAD_TOKEN
     return user
 
 async def update(user_id: PydanticObjectId, user_in: UserUpdate):
@@ -96,17 +89,12 @@ async def delete(user: User):
     await user.delete()
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
     username = verify_token(token)
     if not username:
-        raise credentials_exception
+        raise BAD_TOKEN
     user = await get_by_username(username)
     if not user:
-        raise credentials_exception
+        raise BAD_TOKEN
     return user
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
