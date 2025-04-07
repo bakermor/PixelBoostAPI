@@ -23,12 +23,12 @@ async def get_by_username(username: str) -> User:
 async def create(user_in: UserRegister) -> User:
     user_in.password = hash_password(user_in.password)
     user_data = user_in.model_dump()
-    user_data["health"] = Health(hunger=Stat(current_level=0, equation=[1, 1]),
-                                 thirst=Stat(current_level=0, equation=[1, 1]),
-                                 energy=Stat(current_level=0, equation=[1, 1]),
-                                 social=Stat(current_level=0, equation=[1, 1]),
-                                 fun=Stat(current_level=0, equation=[1, 1]),
-                                 hygiene=Stat(current_level=0, equation=[1, 1]))
+    user_data["health"] = Health(hunger=Stat(current_level=0, equation=[0.001852, 0.001111]),
+                                 thirst=Stat(current_level=0, equation=[0.001389, 0.000926]),
+                                 energy=Stat(current_level=0, equation=[0.001389, 0.000926]),
+                                 social=Stat(current_level=0, equation=[0.000926, 0.000185]),
+                                 fun=Stat(current_level=0, equation=[0.001389, 0.000926]),
+                                 hygiene=Stat(current_level=0, equation=[0.000926, 0.000463]))
     user = await User.insert_one(User(**user_data))
     return user
 

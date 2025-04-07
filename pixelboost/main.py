@@ -1,6 +1,7 @@
 import motor.motor_asyncio
 from beanie import init_beanie
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from pixelboost import config
 from .api import api_router
@@ -23,6 +24,14 @@ async def start_db():
 api = FastAPI(
     title="Pixel Boost",
     root_path="/api",
+)
+
+api.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 api.include_router(api_router)
