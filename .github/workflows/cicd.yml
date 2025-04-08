@@ -31,4 +31,4 @@ jobs:
         JWT_REFRESH_EXP: ${{secrets.JWT_REFRESH_EXP}}
       run: docker build -t cicd-pipeline .
     - name: Push to Docker
-      run: docker push bakermor/cicd-pipeline:latest
+      run: docker push bakermor/pixelboost-api-cicd:latest
