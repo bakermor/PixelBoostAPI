@@ -18,6 +18,17 @@ jobs:
         DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
       run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
     - name: Build the Docker image
+      env:
+        DATABASE_CREDENTIALS: ${{secrets.DATABASE_CREDENTIALS}}
+        DATABASE_CLUSTER_NAME: ${{secrets.CLUSTER_NAME}}
+        DATABASE_CLUSTER_ID: ${{secrets.CLUSTER_ID}}
+        DATABASE_NAME: ${{secrets.DATABASE_NAME}}
+        JWT_SECRET: ${{secrets.JWT_SECRET}}
+        JWT_ALG: ${{secrets.JWT_ALG}}
+        JWT_EXP: ${{secrets.JWT_EXP}}
+        JWT_REFRESH_SECRET: ${{secrets.JWT_REFRESH_SECRET}}
+        JWT_REFRESH_ALG: ${{secrets.JWT_REFRESH_ALG}}
+        JWT_REFRESH_EXP: ${{secrets.JWT_REFRESH_EXP}}
       run: docker build -t cicd-pipeline .
     - name: Push to Docker
       run: docker push bakermor/cicd-pipeline:latest
