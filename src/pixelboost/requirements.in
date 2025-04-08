@@ -1,6 +1,5 @@
-fastapi
+fastapi[standard]
 motor
-uvicorn
 pydantic[email]
 pymongo[srv]
 beanie

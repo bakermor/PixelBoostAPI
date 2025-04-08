@@ -3,7 +3,7 @@ from beanie import init_beanie
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from pixelboost import config
+from . import config
 from .api import api_router
 from .models import User, Activity
 

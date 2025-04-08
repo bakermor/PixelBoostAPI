@@ -32,3 +32,6 @@ venv.bak/
 
 *.dump
 .gitconfig
+
+.terraform/
+*.tfvars
