@@ -1,8 +1,11 @@
-name: Docker Image
+name: CI/CD
 
 on:
   push:
     branches: [ "main" ]
+    
+env:
+  DOCKER_IMAGE_NAME: pixelboost-api-cicd
 
 jobs:
 
@@ -29,6 +32,6 @@ jobs:
         JWT_REFRESH_SECRET: ${{secrets.JWT_REFRESH_SECRET}}
         JWT_REFRESH_ALG: ${{secrets.JWT_REFRESH_ALG}}
         JWT_REFRESH_EXP: ${{secrets.JWT_REFRESH_EXP}}
-      run: docker build -t pixelboost-api-cicd .
+      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest .
     - name: Push to Docker
       run: docker push bakermor/pixelboost-api-cicd:latest
