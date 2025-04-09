@@ -10,7 +10,6 @@ env:
 jobs:
 
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -20,6 +19,7 @@ jobs:
         DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
         DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
       run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+      
     - name: Build the Docker image
       env:
         DATABASE_CREDENTIALS: ${{secrets.DATABASE_CREDENTIALS}}
@@ -32,6 +32,46 @@ jobs:
         JWT_REFRESH_SECRET: ${{secrets.JWT_REFRESH_SECRET}}
         JWT_REFRESH_ALG: ${{secrets.JWT_REFRESH_ALG}}
         JWT_REFRESH_EXP: ${{secrets.JWT_REFRESH_EXP}}
-      run: docker build -t ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest .
+      run: docker build -t ${{secrets.DOCKER_USERNAME}}/${{env.DOCKER_IMAGE_NAME}}:latest .
+      
     - name: Push to Docker
-      run: docker push bakermor/pixelboost-api-cicd:latest
+      run: docker push ${{secrets.DOCKER_USERNAME}}/pixelboost-api-cicd:latest
+  
+  deploy:
+    needs: build
+    runs-on: self-hosted
+
+    steps:
+    - name: Pull Docker image
+      run: sudo docker pull ${{secrets.DOCKER_USERNAME}}/pixelboost-api-cicd:latest
+
+    - name: Delete Old Container
+      run: sudo docker rm -f pixelboost-api-container || true
+
+    - name: Run Docker Container
+      env:
+        DATABASE_CREDENTIALS: ${{secrets.DATABASE_CREDENTIALS}}
+        DATABASE_CLUSTER_NAME: ${{secrets.CLUSTER_NAME}}
+        DATABASE_CLUSTER_ID: ${{secrets.CLUSTER_ID}}
+        DATABASE_NAME: ${{secrets.DATABASE_NAME}}
+        JWT_SECRET: ${{secrets.JWT_SECRET}}
+        JWT_ALG: ${{secrets.JWT_ALG}}
+        JWT_EXP: ${{secrets.JWT_EXP}}
+        JWT_REFRESH_SECRET: ${{secrets.JWT_REFRESH_SECRET}}
+        JWT_REFRESH_ALG: ${{secrets.JWT_REFRESH_ALG}}
+        JWT_REFRESH_EXP: ${{secrets.JWT_REFRESH_EXP}}
+      run: |
+        sudo docker run -d \
+          -p 8080:8080 \
+          --name pixelboost-api-container \
+          -e DATABASE_CREDENTIALS="$DATABASE_CREDENTIALS" \
+          -e DATABASE_CLUSTER_NAME="$DATABASE_CLUSTER_NAME" \
+          -e DATABASE_CLUSTER_ID="$DATABASE_CLUSTER_ID" \
+          -e DATABASE_NAME="$DATABASE_NAME" \
+          -e JWT_SECRET="$JWT_SECRET" \
+          -e JWT_ALG="$JWT_ALG" \
+          -e JWT_EXP="$JWT_EXP" \
+          -e JWT_REFRESH_SECRET="$JWT_REFRESH_SECRET" \
+          -e JWT_REFRESH_ALG="$JWT_REFRESH_ALG" \
+          -e JWT_REFRESH_EXP="$JWT_REFRESH_EXP" \
+          ${{secrets.DOCKER_USERNAME}}/pixelboost-api-cicd:latest
