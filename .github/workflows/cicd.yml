@@ -62,7 +62,7 @@ jobs:
         JWT_REFRESH_EXP: ${{secrets.JWT_REFRESH_EXP}}
       run: |
         sudo docker run -d \
-          -p 8080:8080 \
+          -p 8080:8000 \
           --name pixelboost-api-container \
           -e DATABASE_CREDENTIALS="$DATABASE_CREDENTIALS" \
           -e DATABASE_CLUSTER_NAME="$DATABASE_CLUSTER_NAME" \
