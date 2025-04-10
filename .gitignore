@@ -35,3 +35,4 @@ venv.bak/
 
 .terraform/
 *.tfvars
+*.pem
