@@ -1,5 +1,5 @@
 from beanie import Document, Link, PydanticObjectId
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, field_validator, Field
 
 
 # Pydantic
@@ -83,7 +83,7 @@ class Activity(Document):
         name = "activities"
 
 class User(Document):
-    username: str
+    username: str = Field(min_length=3, max_length=24, pattern=r"^[a-zA-Z0-9_-]+$")
     name: str
     email: EmailStr
     is_verified: bool = False
