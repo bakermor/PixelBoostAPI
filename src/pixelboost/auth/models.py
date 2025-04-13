@@ -3,7 +3,6 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from ..models import Health, Activity
 
-
 class UserBase(BaseModel):
     username: str
     email: EmailStr
@@ -56,12 +55,15 @@ class UserRead(UserBase):
                             "equation": []
                         }}}]}}
 
+class CheckUsername(BaseModel):
+    status: bool
+
 class UserRegister(BaseModel):
-    username: str = Field(min_length=3, max_length=24, pattern=r"^[a-zA-Z0-9_.-]+$",
-                          description="Username must be 3-24 chars: letters, numbers, underscores, dots, or hyphens")
+    username: str = Field(min_length=3, max_length=24, pattern=r"^[a-zA-Z0-9_-]+$",
+                          description="Username must be 3-24 chars: letters, numbers, underscores, or hyphens")
     email: EmailStr
     password: str
-    name: str
+    name: str = ""
 
     @field_validator("password")
     def validate_password(cls, v):
@@ -106,7 +108,7 @@ class UserUpdateEmail(BaseModel):
                 }]}}
 
 class UserUpdateUsername(BaseModel):
-    username: str = Field(min_length=3, max_length=24, pattern=r"^[a-zA-Z0-9_.-]+$")
+    username: str = Field(min_length=3, max_length=24, pattern=r"^[a-zA-Z0-9_-]+$")
 
     model_config = {
         "json_schema_extra": {
