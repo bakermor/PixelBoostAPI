@@ -1,4 +1,4 @@
-import random
+import time
 from typing import Annotated
 
 from beanie import PydanticObjectId
@@ -14,30 +14,43 @@ from ..models import User, Health, Stat
 oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="token")
 
 async def get(user_id: PydanticObjectId) -> User:
-    user = await User.get(user_id)
+    user = await User.get(user_id, fetch_links=True)
     return user
 
 async def get_by_username(username: str) -> User:
-    user = await User.find_one({'username': username})
+    user = await User.find_one({'username': username}, fetch_links=True)
     return user
 
 async def create(user_in: UserRegister) -> User:
     user_in.password = hash_password(user_in.password)
     user_data = user_in.model_dump()
-    user_data["health"] = Health(hunger=Stat(current_level=0, equation=[0.001852, 0.001111]),
-                                 thirst=Stat(current_level=0, equation=[0.001389, 0.000926]),
-                                 energy=Stat(current_level=0, equation=[0.001389, 0.000926]),
-                                 social=Stat(current_level=0, equation=[0.000926, 0.000185]),
-                                 fun=Stat(current_level=0, equation=[0.001389, 0.000926]),
-                                 hygiene=Stat(current_level=0, equation=[0.000926, 0.000463]))
+    created = time.time()
+    user_data["health"] = Health(hunger=Stat(current_level=0, equation=[0.001852, 0.001111], last_updated=created),
+                                 thirst=Stat(current_level=0, equation=[0.001389, 0.000926], last_updated=created),
+                                 energy=Stat(current_level=0, equation=[0.001389, 0.000926], last_updated=created),
+                                 social=Stat(current_level=0, equation=[0.000926, 0.000185], last_updated=created),
+                                 fun=Stat(current_level=0, equation=[0.001389, 0.000926], last_updated=created),
+                                 hygiene=Stat(current_level=0, equation=[0.000926, 0.000463]), last_updated=created)
     user = await User.insert_one(User(**user_data))
     return user
 
 async def login(user_in: User, response: Response):
     access_token = create_access_token(user_in.username)
     refresh_token = create_refresh_token(user_in.username)
-    response.set_cookie(key="access_token", value=f"Bearer {access_token}", httponly=True, max_age=JWT_EXP)
-    response.set_cookie(key="refresh_token", value=refresh_token, httponly=True, max_age=JWT_REFRESH_EXP)
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        secure=True,
+        samesite='none',
+        max_age=JWT_EXP)
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=True,
+        samesite='none',
+        max_age=JWT_REFRESH_EXP)
     return
 
 async def refresh(request: Request, response: Response):
@@ -67,7 +80,7 @@ async def validate_user(user_id: PydanticObjectId, current_user: User):
 async def update(user_id: PydanticObjectId, user_in: UserUpdate):
     update_data = user_in.model_dump(exclude_unset=True)
     await User.find_one(User.id == user_id).update({"$set": update_data})
-    user = await User.get(user_id)
+    user = await User.get(user_id, fetch_links=True)
     return user
 
 async def update_username(user: User, username: str):

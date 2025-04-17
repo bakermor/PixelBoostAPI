@@ -104,7 +104,7 @@ async def change_username(user_id: PydanticObjectId, username_update: UserUpdate
                   response_model=UserRead,
                   responses={status.HTTP_401_UNAUTHORIZED: Responses.TOKEN_401,
                              status.HTTP_404_NOT_FOUND: Responses.USER_404})
-async def change_username(user_id: PydanticObjectId, email_update: UserUpdateEmail, current_user: CurrentUser):
+async def change_email(user_id: PydanticObjectId, email_update: UserUpdateEmail, current_user: CurrentUser):
     """
     Change user's email.
     """

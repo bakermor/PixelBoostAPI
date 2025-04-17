@@ -1,7 +1,8 @@
-from beanie import PydanticObjectId, Link
+from beanie import PydanticObjectId
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from ..models import Health, Activity
+from ..models import Health
+from ..activities.models import ActivityRead
 
 class UserBase(BaseModel):
     username: str
@@ -10,7 +11,7 @@ class UserBase(BaseModel):
 
 class UserRead(UserBase):
     id: PydanticObjectId
-    current_activity: Link[Activity] | None
+    current_activity: ActivityRead | None
 
     health: Health
 

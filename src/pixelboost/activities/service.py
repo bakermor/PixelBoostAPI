@@ -42,7 +42,7 @@ async def start(activity_id: PydanticObjectId, time: float, user: User):
     activity.start_time = time
     await activity.save()
 
-    user.current_activity = DBRef(Activity.Settings.name, activity_id)
+    user.current_activity = activity
     await user.save()
 
 async def stop(activity_id: PydanticObjectId, user: User):

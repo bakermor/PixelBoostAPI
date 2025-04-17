@@ -5,7 +5,7 @@ from pydantic import BaseModel, EmailStr, field_validator, Field
 # Pydantic
 class Stat(BaseModel):
     current_level: float
-    last_updated: float | None = None
+    last_updated: float
     equation: list[float]
 
     @field_validator("current_level")
