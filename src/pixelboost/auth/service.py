@@ -26,7 +26,7 @@ async def create(user_in: UserRegister) -> User:
     user_data = user_in.model_dump()
     created = time.time()
     user_data["health"] = Health(hunger=Stat(current_level=0, equation=[0.001852, 0.001111], last_updated=created),
-                                 thirst=Stat(current_level=0, equation=[0.001389, 0.000926], last_updated=created),
+                                 thirst=Stat(current_level=0, equation=[0.001852, 0.001111], last_updated=created),
                                  energy=Stat(current_level=0, equation=[0.001389, 0.000926], last_updated=created),
                                  social=Stat(current_level=0, equation=[0.000926, 0.000185], last_updated=created),
                                  fun=Stat(current_level=0, equation=[0.001389, 0.000926], last_updated=created),
