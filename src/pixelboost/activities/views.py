@@ -42,8 +42,7 @@ async def get_activity(activity_id: PydanticObjectId, current_user: CurrentUser)
 @router.post("/{activity_id}/start",
              status_code=status.HTTP_204_NO_CONTENT,
              responses={status.HTTP_401_UNAUTHORIZED: Responses.TOKEN_401,
-                        status.HTTP_404_NOT_FOUND: Responses.ACTIVITY_404,
-                        status.HTTP_409_CONFLICT: Responses.ACTIVITY_409})
+                        status.HTTP_404_NOT_FOUND: Responses.ACTIVITY_404})
 async def start_activity(activity_id: PydanticObjectId, time: ActivityStart, current_user: CurrentUser):
     await start(activity_id, time.start_time, current_user)
 
