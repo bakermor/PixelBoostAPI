@@ -1,8 +1,8 @@
 from beanie import PydanticObjectId
 from fastapi import APIRouter, status
 
-from .service import update, update_one
-from .models import StatUpdate, HealthUpdate
+from .service import update, update_one, equation_update
+from .models import StatUpdate, HealthUpdate, EquationUpdate
 from ..auth.service import validate_user, CurrentUser
 from ..enums import Stats
 from ..exceptions import Responses, BAD_STAT
@@ -32,8 +32,9 @@ async def update_health(updated_health: HealthUpdate, current_user: CurrentUser)
     return user_out.health
 
 @router.patch("/equations", response_model=Health)
-async def update_equations():
-    pass
+async def update_equations(updated_equations: EquationUpdate, current_user: CurrentUser):
+    user_out = await equation_update(current_user, updated_equations)
+    return user_out.health
 
 @router.patch("/{stat}",
               response_model=Health,

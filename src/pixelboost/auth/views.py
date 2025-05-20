@@ -84,7 +84,7 @@ async def update_user(user_id: PydanticObjectId, user_in: UserUpdate, current_us
     user = await update(user_id, user_in)
     return user
 
-@user_router.post("/{user_id}/change-username",
+@user_router.patch("/{user_id}/change-username",
                   response_model=UserRead,
                   responses={status.HTTP_401_UNAUTHORIZED: Responses.TOKEN_401,
                              status.HTTP_404_NOT_FOUND: Responses.USER_404,
@@ -100,7 +100,7 @@ async def change_username(user_id: PydanticObjectId, username_update: UserUpdate
     user_out = await update_username(user, username_update.username)
     return user_out
 
-@user_router.post("/{user_id}/change-email",
+@user_router.patch("/{user_id}/change-email",
                   response_model=UserRead,
                   responses={status.HTTP_401_UNAUTHORIZED: Responses.TOKEN_401,
                              status.HTTP_404_NOT_FOUND: Responses.USER_404})
@@ -113,7 +113,7 @@ async def change_email(user_id: PydanticObjectId, email_update: UserUpdateEmail,
     return user_out
 
 
-@user_router.post("/{user_id}/change-password",
+@user_router.patch("/{user_id}/change-password",
                   response_model=UserRead,
                   responses={status.HTTP_400_BAD_REQUEST: Responses.PASSWORD_400,
                              status.HTTP_401_UNAUTHORIZED: Responses.TOKEN_401,

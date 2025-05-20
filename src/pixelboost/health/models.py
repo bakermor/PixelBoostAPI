@@ -16,3 +16,11 @@ class HealthUpdate(BaseModel):
     social: StatUpdate
     fun: StatUpdate
     hygiene: StatUpdate
+
+class EquationUpdate(BaseModel):
+    hunger: float
+    thirst: float
+    energy: float
+    social: float
+    fun: float
+    hygiene: float
