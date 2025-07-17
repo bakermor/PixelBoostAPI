@@ -9,6 +9,9 @@ class UserBase(BaseModel):
     email: EmailStr
     name: str
 
+    followers: list[PydanticObjectId]
+    following: list[PydanticObjectId]
+
 class UserRead(UserBase):
     id: PydanticObjectId
     current_activity: ActivityRead | None

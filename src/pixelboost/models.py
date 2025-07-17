@@ -1,4 +1,5 @@
 import time
+
 from beanie import Document, Link, PydanticObjectId
 from pydantic import BaseModel, EmailStr, field_validator, Field
 
@@ -89,6 +90,9 @@ class User(Document):
     email: EmailStr
     is_verified: bool = False
     password: str
+
+    followers: list[PydanticObjectId] = []  # uids
+    following: list[PydanticObjectId] = []
 
     current_activity: Link[Activity] | None = None
 

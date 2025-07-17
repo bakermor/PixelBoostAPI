@@ -4,41 +4,15 @@ from beanie import PydanticObjectId
 from fastapi import APIRouter, status, Depends, Query, Response, Request
 from fastapi.security import OAuth2PasswordRequestForm
 
-from .models import CheckUsername, UserRead, UserRegister, UserUpdate, UserUpdateEmail, UserUpdatePassword, UserUpdateUsername
+from .models import CheckUsername, UserRead, UserRegister, UserUpdate, UserUpdateEmail, UserUpdatePassword, \
+    UserUpdateUsername
 from .service import (create, delete, get_by_username, login, refresh, set_password, update, update_email,
                       update_username, validate_user, CurrentUser)
 from .utils import verify_password
-from ..exceptions import Responses, USERNAME_CONFLICT, BAD_LOGIN, INCORRECT_PASSWORD
+from ..exceptions import Responses, USERNAME_CONFLICT, BAD_LOGIN, INCORRECT_PASSWORD, USER_NOT_FOUND
 
 user_router = APIRouter(tags=["Users"])
 auth_router = APIRouter(tags=["Auth"])
-
-@user_router.get("/check-username", response_model=CheckUsername)
-async def check_username(username: str = Query(min_length=3, max_length=24, pattern=r"^[a-zA-Z0-9_-]+$",
-                                               description="Username must be 3-24 chars: letters, numbers, underscores,"
-                                               " or hyphens")):
-    """
-    Check if username is in use. Status is false if username is unavailable
-    """
-    user = await get_by_username(username)
-    if user:
-        return {"status": False}
-    else:
-        return {"status": True}
-
-@user_router.post("/register",
-                  status_code=status.HTTP_201_CREATED,
-                  response_model=UserRead,
-                  responses={status.HTTP_409_CONFLICT: Responses.USERNAME_409})
-async def register_user(user_in: UserRegister):
-    """
-    Register new user.
-    """
-    user = await get_by_username(user_in.username)
-    if user:
-        raise USERNAME_CONFLICT
-    user = await create(user_in)
-    return user
 
 @auth_router.post("/token",
                   status_code=status.HTTP_204_NO_CONTENT,
@@ -71,6 +45,41 @@ async def get_me(current_user: CurrentUser):
     Returns the logged-in user's information.
     """
     return current_user
+
+@user_router.get("/check-username", response_model=CheckUsername)
+async def check_username(username: str = Query(min_length=3, max_length=24, pattern=r"^[a-zA-Z0-9_-]+$",
+                                               description="Username must be 3-24 chars: letters, numbers, underscores,"
+                                               " or hyphens")):
+    """
+    Check if username is in use. Status is false if username is unavailable
+    """
+    user = await get_by_username(username)
+    if user:
+        return {"status": False}
+    else:
+        return {"status": True}
+
+@user_router.post("/register",
+                  status_code=status.HTTP_201_CREATED,
+                  response_model=UserRead,
+                  responses={status.HTTP_409_CONFLICT: Responses.USERNAME_409})
+async def register_user(user_in: UserRegister):
+    """
+    Register new user.
+    """
+    user = await get_by_username(user_in.username)
+    if user:
+        raise USERNAME_CONFLICT
+    user = await create(user_in)
+    return user
+
+@user_router.get("/name/{username}", response_model=UserRead)
+async def get_user_by_username(username: str):
+    user = await get_by_username(username)
+    if not user:
+        raise USER_NOT_FOUND
+    else:
+        return user
 
 @user_router.patch("/{user_id}",
                    response_model=UserRead,
