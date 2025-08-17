@@ -1,3 +1,5 @@
+import time
+
 from beanie import Document, Link, PydanticObjectId
 from pydantic import BaseModel, EmailStr, field_validator, Field
 
@@ -5,7 +7,7 @@ from pydantic import BaseModel, EmailStr, field_validator, Field
 # Pydantic
 class Stat(BaseModel):
     current_level: float
-    last_updated: float | None = None
+    last_updated: float = Field(default_factory=lambda: time.time())
     equation: list[float]
 
     @field_validator("current_level")
@@ -88,6 +90,9 @@ class User(Document):
     email: EmailStr
     is_verified: bool = False
     password: str
+
+    followers: list[PydanticObjectId] = []  # uids
+    following: list[PydanticObjectId] = []
 
     current_activity: Link[Activity] | None = None
 

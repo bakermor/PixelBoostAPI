@@ -32,9 +32,6 @@ async def get(activity_id: PydanticObjectId, user: User) -> Activity:
     return activity
 
 async def start(activity_id: PydanticObjectId, time: float, user: User):
-    if user.current_activity:
-        raise ACTIVITY_CONFLICT
-
     activity = await Activity.get(activity_id)
     if not activity:
         raise ACTIVITY_NOT_FOUND
@@ -42,7 +39,7 @@ async def start(activity_id: PydanticObjectId, time: float, user: User):
     activity.start_time = time
     await activity.save()
 
-    user.current_activity = DBRef(Activity.Settings.name, activity_id)
+    user.current_activity = activity
     await user.save()
 
 async def stop(activity_id: PydanticObjectId, user: User):
