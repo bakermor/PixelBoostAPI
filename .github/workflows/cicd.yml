@@ -35,7 +35,7 @@ jobs:
       run: docker build -t ${{secrets.DOCKER_USERNAME}}/${{env.DOCKER_IMAGE_NAME}}:latest .
       
     - name: Push to Docker
-      run: docker push ${{secrets.DOCKER_USERNAME}}/pixelboost-api-cicd:latest
+      run: docker push ${{secrets.DOCKER_USERNAME}}/${{env.DOCKER_IMAGE_NAME}}:latest
   
   deploy:
     needs: build
@@ -43,7 +43,7 @@ jobs:
 
     steps:
     - name: Pull Docker image
-      run: sudo docker pull ${{secrets.DOCKER_USERNAME}}/pixelboost-api-cicd:latest
+      run: sudo docker pull ${{secrets.DOCKER_USERNAME}}/${{env.DOCKER_IMAGE_NAME}}:latest
 
     - name: Delete Old Container
       run: sudo docker rm -f pixelboost-api-container || true
@@ -74,4 +74,4 @@ jobs:
           -e JWT_REFRESH_SECRET=$JWT_REFRESH_SECRET \
           -e JWT_REFRESH_ALG=$JWT_REFRESH_ALG \
           -e JWT_REFRESH_EXP=$JWT_REFRESH_EXP \
-          ${{secrets.DOCKER_USERNAME}}/pixelboost-api-cicd:latest
+          ${{secrets.DOCKER_USERNAME}}/${{env.DOCKER_IMAGE_NAME}}:latest
