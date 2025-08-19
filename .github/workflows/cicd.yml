@@ -45,6 +45,9 @@ jobs:
     - name: Pull Docker image
       run: sudo docker pull ${{secrets.DOCKER_USERNAME}}/${{env.DOCKER_IMAGE_NAME}}:latest
 
+    - name: Ensure Docker network exists
+      run: sudo docker network create pixelboost-net
+
     - name: Delete Old Container
       run: sudo docker rm -f pixelboost-api-container || true
 
@@ -64,6 +67,7 @@ jobs:
         sudo docker run -d \
           -p 8080:8000 \
           --name pixelboost-api-container \
+          --network pixelboost-net \
           -e DATABASE_CREDENTIALS=$DATABASE_CREDENTIALS \
           -e DATABASE_CLUSTER_NAME=$DATABASE_CLUSTER_NAME \
           -e DATABASE_CLUSTER_ID=$DATABASE_CLUSTER_ID \
