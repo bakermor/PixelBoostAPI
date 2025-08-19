@@ -46,7 +46,7 @@ jobs:
       run: sudo docker pull ${{secrets.DOCKER_USERNAME}}/${{env.DOCKER_IMAGE_NAME}}:latest
 
     - name: Ensure Docker network exists
-      run: sudo docker network create pixelboost-net
+      run: sudo docker network create pixelboost-net || true
 
     - name: Delete Old Container
       run: sudo docker rm -f pixelboost-api-container || true
