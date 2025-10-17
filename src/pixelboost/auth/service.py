@@ -40,14 +40,14 @@ async def login(user_in: User, response: Response):
         key="access_token",
         value=f"Bearer {access_token}",
         httponly=True,
-        secure=True,
+        secure=False,
         samesite='none',
         max_age=JWT_EXP)
     response.set_cookie(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=True,
+        secure=False,
         samesite='none',
         max_age=JWT_REFRESH_EXP)
     return
