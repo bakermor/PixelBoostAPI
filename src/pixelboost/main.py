@@ -23,7 +23,7 @@ async def start_db():
 
 api = FastAPI(
     title="Pixel Boost",
-    root_path="",
+    root_path="/api",
 )
 
 api.add_middleware(
@@ -35,4 +35,4 @@ api.add_middleware(
 )
 
 api.include_router(api_router)
-app.mount('', app=api)
+app.mount('/api', app=api)
