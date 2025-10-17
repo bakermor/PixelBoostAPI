@@ -31,8 +31,7 @@ api.add_middleware(
     allow_origins=["http://3.88.183.50:80"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
-    root_path="",
+    allow_headers=["*"]
 )
 
 api.include_router(api_router)
